@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { AlertCircle, Loader2, LockKeyhole, LogIn, Mail, Send, User, UserPlus } from 'lucide-react';
+import { AlertCircle, Loader2, LockKeyhole, LogIn, Mail, User, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,6 @@ declare global {
         };
       };
     };
-    onTelegramAuth?: (user: Record<string, unknown>) => void;
   }
 }
 
@@ -33,14 +32,11 @@ const googleClientId = isConfigured(
 )
   ? import.meta.env.VITE_GOOGLE_CLIENT_ID
   : '';
-const telegramBotUsername = isConfigured(import.meta.env.VITE_TELEGRAM_BOT_USERNAME, 'your_bot_username')
-  ? import.meta.env.VITE_TELEGRAM_BOT_USERNAME
-  : '';
 const inputClass =
   'h-11 border-slate-300 bg-white text-left text-slate-950 shadow-sm placeholder:text-slate-400 focus-visible:border-emerald-500 focus-visible:ring-emerald-500';
 
 const Login = () => {
-  const { isAuthenticated, login, register, loginWithGoogle, loginWithTelegram } = useAuth();
+  const { isAuthenticated, login, register, loginWithGoogle } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -48,7 +44,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
-  const telegramButtonRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!googleClientId || !googleButtonRef.current) return;
@@ -92,38 +87,6 @@ const Login = () => {
     document.head.appendChild(script);
   }, [loginWithGoogle]);
 
-  useEffect(() => {
-    if (!telegramBotUsername || !telegramButtonRef.current) return;
-
-    window.onTelegramAuth = async (user) => {
-      setError('');
-      setIsSubmitting(true);
-      try {
-        await loginWithTelegram(user);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Telegram orqali kirishda xatolik yuz berdi');
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-
-    telegramButtonRef.current.innerHTML = '';
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.async = true;
-    script.setAttribute('data-telegram-login', telegramBotUsername.replace('@', ''));
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-radius', '8');
-    script.setAttribute('data-userpic', 'false');
-    script.setAttribute('data-request-access', 'write');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    telegramButtonRef.current.appendChild(script);
-
-    return () => {
-      delete window.onTelegramAuth;
-    };
-  }, [loginWithTelegram]);
-
   const handlePasswordAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
@@ -144,13 +107,8 @@ const Login = () => {
     }
   };
 
-  const showProviderSetupError = (provider: 'Google' | 'Telegram') => {
-    if (provider === 'Google') {
-      setError('Google orqali kirish uchun .env faylida VITE_GOOGLE_CLIENT_ID va server/.env faylida GOOGLE_CLIENT_ID sozlanishi kerak.');
-      return;
-    }
-
-    setError('Telegram orqali kirish uchun .env faylida VITE_TELEGRAM_BOT_USERNAME va server/.env faylida TELEGRAM_BOT_TOKEN sozlanishi kerak.');
+  const showGoogleSetupError = () => {
+    setError('Google orqali kirish uchun .env faylida VITE_GOOGLE_CLIENT_ID va server/.env faylida GOOGLE_CLIENT_ID sozlanishi kerak.');
   };
 
   if (isAuthenticated) return <Navigate to="/" replace />;
@@ -168,7 +126,7 @@ const Login = () => {
                 Xarajatlaringizni xavfsiz hisob bilan boshqaring
               </h1>
               <p className="max-w-xl text-lg text-muted-foreground">
-                Email, Google yoki Telegram orqali kiring va guruh xarajatlari ma'lumotlarini shaxsiy hisobingizga bog'lang.
+                Email yoki Google orqali kiring va guruh xarajatlari ma'lumotlarini shaxsiy hisobingizga bog'lang.
               </p>
             </div>
           </div>
@@ -304,18 +262,9 @@ const Login = () => {
                 {googleClientId ? (
                   <div className="flex min-h-11 justify-center" ref={googleButtonRef} />
                 ) : (
-                  <Button variant="outline" className="w-full border-slate-300 bg-white text-slate-900" onClick={() => showProviderSetupError('Google')}>
+                  <Button variant="outline" className="w-full border-slate-300 bg-white text-slate-900" onClick={showGoogleSetupError}>
                     <LogIn className="h-4 w-4" />
                     Google orqali kirish
-                  </Button>
-                )}
-
-                {telegramBotUsername ? (
-                  <div className="flex min-h-11 justify-center" ref={telegramButtonRef} />
-                ) : (
-                  <Button variant="outline" className="w-full border-slate-300 bg-white text-slate-900" onClick={() => showProviderSetupError('Telegram')}>
-                    <Send className="h-4 w-4" />
-                    Telegram orqali kirish
                   </Button>
                 )}
               </div>

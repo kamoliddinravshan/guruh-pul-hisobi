@@ -5,7 +5,6 @@ export interface AuthUser {
   name: string;
   email?: string | null;
   avatarUrl?: string | null;
-  telegramUsername?: string | null;
 }
 
 export interface AuthResponse {
@@ -20,7 +19,6 @@ export interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
-  loginWithTelegram: (authData: Record<string, unknown>) => Promise<void>;
   logout: () => void;
 }
 

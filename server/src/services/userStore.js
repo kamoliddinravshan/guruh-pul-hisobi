@@ -52,13 +52,6 @@ export async function findUserByGoogleOrEmail(googleId, email) {
   return users.find((user) => user.providers?.googleId === googleId || user.email === email) || null;
 }
 
-export async function findUserByTelegramId(telegramId) {
-  if (isMongoConnected()) return User.findOne({ 'providers.telegramId': telegramId });
-
-  const users = await readFileUsers();
-  return users.find((user) => user.providers?.telegramId === telegramId) || null;
-}
-
 export async function createUser(userData) {
   if (isMongoConnected()) return User.create(userData);
 

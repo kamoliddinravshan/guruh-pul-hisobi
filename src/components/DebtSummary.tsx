@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowRight, CheckCircle } from 'lucide-react';
-import { Debt, Group } from '@/pages/Index';
+import type { Debt, Group } from '@/types';
 
 interface DebtSummaryProps {
   debts: Debt[];
@@ -23,19 +23,23 @@ export const DebtSummary = ({ debts, groups }: DebtSummaryProps) => {
 
   if (debts.length === 0) {
     return (
-      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-700">
-            <CheckCircle className="h-5 w-5" />
+      <Card className="border-emerald-100 bg-white shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-normal text-slate-950">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+              <CheckCircle className="h-5 w-5" />
+            </span>
             Qarzlar holati
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center py-8">
-          <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-          <h3 className="text-lg font-semibold text-green-700 mb-2">
-            Ajoyib!
+        <CardContent className="px-5 pb-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+            <CheckCircle className="h-6 w-6" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-950">
+            Hisoblar teng
           </h3>
-          <p className="text-green-600">
+          <p className="mt-2 text-sm text-slate-500">
             Barcha hisob-kitoblar teng. Hech kim hech kimga qarz emas.
           </p>
         </CardContent>
@@ -44,14 +48,16 @@ export const DebtSummary = ({ debts, groups }: DebtSummaryProps) => {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-      <CardHeader>
+    <Card className="border-slate-200 bg-white shadow-sm">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-blue-700">
-            <AlertCircle className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-normal text-slate-950">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+              <AlertCircle className="h-5 w-5" />
+            </span>
             Qarzlar holati
           </CardTitle>
-          <Badge className="bg-debt-primary hover:bg-debt-secondary text-white">
+          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50">
             {debts.length} ta qarz
           </Badge>
         </div>
@@ -59,12 +65,12 @@ export const DebtSummary = ({ debts, groups }: DebtSummaryProps) => {
       
       <CardContent className="space-y-4">
         {/* Total Debt Amount */}
-        <div className="text-center p-4 bg-white/50 rounded-lg border border-blue-200">
-          <div className="text-2xl font-bold text-debt-primary">
-            {formatCurrency(totalDebtAmount)}
-          </div>
-          <div className="text-sm text-debt-dark">
+        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+          <div className="text-sm font-medium text-blue-700">
             Jami qarz miqdori
+          </div>
+          <div className="mt-1 text-2xl font-semibold text-slate-950">
+            {formatCurrency(totalDebtAmount)}
           </div>
         </div>
 
@@ -73,33 +79,33 @@ export const DebtSummary = ({ debts, groups }: DebtSummaryProps) => {
           {debts.map((debt, index) => (
             <div
               key={index}
-              className="bg-white/70 p-4 rounded-lg border border-blue-100 hover:shadow-md transition-shadow"
+              className="rounded-lg border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm"
             >
               {/* Debt Info */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-debt-primary">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="truncate font-medium text-slate-900">
                     {debt.from}
                   </span>
-                  <ArrowRight className="h-4 w-4 text-debt-secondary" />
-                  <span className="font-medium text-debt-primary">
+                  <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  <span className="truncate font-medium text-slate-900">
                     {debt.to}
                   </span>
                 </div>
-                <div className="text-lg font-bold text-debt-primary">
+                <div className="shrink-0 text-sm font-semibold text-blue-700">
                   {formatCurrency(debt.amount)}
                 </div>
               </div>
 
               {/* Group Info */}
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-xs text-slate-500">
                   {getGroupName(debt.groupId)} guruhida
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs hover:bg-debt-light border-debt-primary text-debt-primary"
+                  className="h-8 border-slate-300 bg-white text-xs text-slate-700"
                 >
                   To'landi deb belgilash
                 </Button>
@@ -109,14 +115,14 @@ export const DebtSummary = ({ debts, groups }: DebtSummaryProps) => {
         </div>
 
         {/* Settlement Suggestions */}
-        <div className="mt-4 p-3 bg-white/50 rounded-lg border border-blue-200">
-          <div className="text-sm font-medium text-debt-dark mb-2">
-            💡 Maslahat: Qarzlarni oson to'lash uchun
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div className="mb-2 text-sm font-medium text-slate-800">
+            Qarzlarni yopish bo'yicha tavsiya
           </div>
-          <div className="text-xs text-debt-dark space-y-1">
-            <div>• Bank o'tkazmalari orqali to'lang</div>
-            <div>• To'lovdan keyin "To'landi" tugmasini bosing</div>
-            <div>• Katta miqdordagi qarzlardan boshlang</div>
+          <div className="space-y-1 text-xs text-slate-600">
+            <div>- Bank o'tkazmalari orqali to'lang</div>
+            <div>- To'lovdan keyin "To'landi" tugmasini bosing</div>
+            <div>- Katta miqdordagi qarzlardan boshlang</div>
           </div>
         </div>
       </CardContent>

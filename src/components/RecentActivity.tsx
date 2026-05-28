@@ -2,21 +2,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Receipt, Users } from 'lucide-react';
-import { Expense, Group } from '@/pages/Index';
+import type { Expense, Group } from '@/types';
 
 interface RecentActivityProps {
   expenses: Expense[];
   groups: Group[];
 }
 
-const categoryEmojis: { [key: string]: string } = {
-  'ovqat': '🍽️',
-  'transport': '🚗',
-  'turar-joy': '🏠',
-  'ko\'ngilochar': '🎉',
-  'shopping': '🛍️',
-  'sog\'liq': '💊',
-  'boshqa': '📋'
+const categoryLabels: { [key: string]: string } = {
+  'ovqat': 'Ovqat',
+  'transport': 'Transport',
+  'turar-joy': 'Turar joy',
+  'ko\'ngilochar': 'Ko\'ngilochar',
+  'shopping': 'Xarid',
+  'sog\'liq': 'Sog\'liq',
+  'boshqa': 'Boshqa'
 };
 
 export const RecentActivity = ({ expenses, groups }: RecentActivityProps) => {
@@ -50,16 +50,20 @@ export const RecentActivity = ({ expenses, groups }: RecentActivityProps) => {
 
   if (sortedExpenses.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
+      <Card className="border-slate-200 bg-white shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-normal text-slate-950">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+              <Clock className="h-5 w-5" />
+            </span>
             So'nggi faoliyat
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center py-8">
-          <Receipt className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
+        <CardContent className="px-5 pb-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+            <Receipt className="h-6 w-6" />
+          </div>
+          <p className="text-sm text-slate-500">
             Hali hech qanday xarajat qo'shilmagan
           </p>
         </CardContent>
@@ -68,10 +72,12 @@ export const RecentActivity = ({ expenses, groups }: RecentActivityProps) => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" />
+    <Card className="border-slate-200 bg-white shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-normal text-slate-950">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+            <Clock className="h-5 w-5" />
+          </span>
           So'nggi faoliyat
         </CardTitle>
       </CardHeader>
@@ -81,45 +87,48 @@ export const RecentActivity = ({ expenses, groups }: RecentActivityProps) => {
           {sortedExpenses.map((expense, index) => (
             <div
               key={expense.id}
-              className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors animate-fade-in"
+              className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 transition-colors hover:bg-slate-100/70 animate-fade-in"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               {/* Category Icon */}
-              <div className="text-xl">
-                {categoryEmojis[expense.category] || '📋'}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm">
+                <Receipt className="h-4 w-4" />
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-sm truncate">
+                    <div className="truncate text-sm font-medium text-slate-950">
                       {expense.title}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {expense.payer} to'ladi • {getGroupName(expense.groupId)}
+                    <div className="text-xs text-slate-500">
+                      {expense.payer} to'ladi - {getGroupName(expense.groupId)}
                     </div>
                   </div>
                   
                   <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-medium text-primary">
+                    <div className="text-sm font-semibold text-slate-900">
                       {formatCurrency(expense.amount)}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-slate-500">
                       {formatTimeAgo(expense.date)}
                     </div>
                   </div>
                 </div>
 
                 {/* Participants */}
-                <div className="flex items-center gap-2 mt-2">
-                  <Users className="h-3 w-3 text-muted-foreground" />
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant="outline" className="h-6 border-slate-200 bg-white text-xs text-slate-600">
+                    {categoryLabels[expense.category] || 'Boshqa'}
+                  </Badge>
+                  <Users className="h-3 w-3 text-slate-400" />
                   <div className="flex gap-1 flex-wrap">
                     {expense.participants.slice(0, 3).map((participant, idx) => (
                       <Badge
                         key={idx}
                         variant="secondary"
-                        className="text-xs px-1.5 py-0.5"
+                        className="bg-white px-1.5 py-0.5 text-xs text-slate-600 hover:bg-white"
                       >
                         {participant}
                       </Badge>
@@ -127,7 +136,7 @@ export const RecentActivity = ({ expenses, groups }: RecentActivityProps) => {
                     {expense.participants.length > 3 && (
                       <Badge
                         variant="secondary"
-                        className="text-xs px-1.5 py-0.5"
+                        className="bg-white px-1.5 py-0.5 text-xs text-slate-600 hover:bg-white"
                       >
                         +{expense.participants.length - 3}
                       </Badge>
@@ -141,8 +150,8 @@ export const RecentActivity = ({ expenses, groups }: RecentActivityProps) => {
 
         {/* Summary */}
         {expenses.length > 10 && (
-          <div className="text-center pt-2 border-t">
-            <div className="text-sm text-muted-foreground">
+          <div className="border-t pt-2 text-center">
+            <div className="text-sm text-slate-500">
               ... va yana {expenses.length - 10} ta xarajat
             </div>
           </div>

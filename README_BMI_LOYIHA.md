@@ -11,7 +11,7 @@ npm run dev
 ```
 
 Frontend React + TypeScript + Vite asosida ishlaydi. Prototip ma'lumotlarni `localStorage`da saqlaydi.
-Google va Telegram orqali kirish uchun `.env` faylida `VITE_GOOGLE_CLIENT_ID` va `VITE_TELEGRAM_BOT_USERNAME` qiymatlarini kiriting.
+Google orqali kirish uchun `.env` faylida `VITE_GOOGLE_CLIENT_ID` qiymatini kiriting.
 
 ## Backend namunasi
 
@@ -23,7 +23,7 @@ npm run dev
 ```
 
 Backend Express + MongoDB + JWT asosida yozildi. U guruhlar, xarajatlar va qarzlarni soddalashtirish API endpointlarini beradi.
-Google autentifikatsiyasi uchun `GOOGLE_CLIENT_ID`, Telegram autentifikatsiyasi uchun esa `TELEGRAM_BOT_TOKEN` sozlanishi kerak.
+Google autentifikatsiyasi uchun `GOOGLE_CLIENT_ID` sozlanishi kerak.
 MongoDB ishlamasa, backend auth ma'lumotlarini vaqtincha `server/data/users.json` faylida saqlab ishga tushadi.
 
 ## Asosiy algoritm

@@ -1,12 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 import {
   createUser,
   findUserByEmail,
   findUserByGoogleOrEmail,
-  findUserByTelegramId,
   updateUser,
 } from '../services/userStore.js';
 
@@ -26,7 +24,6 @@ function publicUser(user) {
     name: user.name,
     email: user.email || null,
     avatarUrl: user.avatarUrl || null,
-    telegramUsername: user.providers?.telegramUsername || null,
   };
 }
 
@@ -49,7 +46,7 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await findUserByEmail(email?.toLowerCase().trim());
   if (!user) return res.status(401).json({ message: 'Email yoki parol noto\'g\'ri' });
-  if (!user.passwordHash) return res.status(401).json({ message: 'Bu hisob Google yoki Telegram orqali ochilgan' });
+  if (!user.passwordHash) return res.status(401).json({ message: 'Bu hisob Google orqali ochilgan' });
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ message: 'Email yoki parol noto\'g\'ri' });
   res.json(authResponse(user));
@@ -85,60 +82,6 @@ router.post('/google', async (req, res) => {
       email,
       avatarUrl: profile.picture,
       providers: { googleId },
-    });
-  }
-
-  res.json(authResponse(user));
-});
-
-router.post('/telegram', async (req, res) => {
-  const data = req.body || {};
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-
-  if (!isConfigured(botToken, '123456789:your_telegram_bot_token')) {
-    return res.status(500).json({ message: 'TELEGRAM_BOT_TOKEN sozlanmagan' });
-  }
-  if (!data.id || !data.auth_date || !data.hash) return res.status(400).json({ message: 'Telegram ma\'lumotlari to\'liq emas' });
-
-  const authAgeSeconds = Math.floor(Date.now() / 1000) - Number(data.auth_date);
-  if (authAgeSeconds > 86400) return res.status(401).json({ message: 'Telegram sessiyasi eskirgan' });
-
-  const checkString = Object.keys(data)
-    .filter((key) => key !== 'hash' && data[key] !== undefined && data[key] !== null)
-    .sort()
-    .map((key) => `${key}=${data[key]}`)
-    .join('\n');
-
-  const secretKey = crypto.createHash('sha256').update(botToken).digest();
-  const calculatedHash = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
-
-  const expected = Buffer.from(calculatedHash, 'hex');
-  const received = Buffer.from(String(data.hash), 'hex');
-  if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
-    return res.status(401).json({ message: 'Telegram imzosi noto\'g\'ri' });
-  }
-
-  const telegramId = String(data.id);
-  const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || data.username || `Telegram ${telegramId}`;
-  let user = await findUserByTelegramId(telegramId);
-
-  if (user) {
-    user.name = user.name || name;
-    user.avatarUrl = data.photo_url || user.avatarUrl;
-    user.providers = {
-      ...(user.providers || {}),
-      telegramId,
-      telegramUsername: data.username,
-    };
-    user = await updateUser(user);
-  } else {
-    user = await createUser({
-      name,
-      avatarUrl: data.photo_url,
-      providers: {
-        telegramId,
-        telegramUsername: data.username,
-      },
     });
   }
 

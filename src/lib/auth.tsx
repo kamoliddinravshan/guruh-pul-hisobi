@@ -45,13 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         persistAuth(nextAuth);
       },
-      loginWithTelegram: async (authData) => {
-        const nextAuth = await apiRequest<AuthResponse>('/auth/telegram', {
-          method: 'POST',
-          body: JSON.stringify(authData),
-        });
-        persistAuth(nextAuth);
-      },
       logout: () => {
         localStorage.removeItem(AUTH_KEY);
         setAuth(null);
