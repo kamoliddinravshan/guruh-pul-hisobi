@@ -1,82 +1,72 @@
-# Welcome to your Lovable project
+Guruh Pul Hisobi
+Guruh Pul Hisobi - do'stlar, oila a'zolari yoki jamoa bilan qilingan xarajatlarni yozib borish, ulushlarni hisoblash va qarzlarni soddalashtirish uchun web-ilova.
 
-## Project info
-
-**URL**: https://lovable.dev/projects/4854fd22-685d-4157-bf56-4fc7c61265cd
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/4854fd22-685d-4157-bf56-4fc7c61265cd) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Imkoniyatlar
+Guruh yaratish va guruh a'zolari bilan xarajatlarni boshqarish
+Xarajat summasi, to'lovchi, ishtirokchilar va kategoriya bo'yicha yozuv qo'shish
+Har bir guruh uchun umumiy xarajatlarni ko'rish
+Kim kimga qancha to'lashi kerakligini avtomatik hisoblash
+Qarzlarni minimal tranzaksiyalarga qisqartirish
+Email/parol, Google va Telegram orqali autentifikatsiya
+Frontendda prototip ma'lumotlarni localStorage orqali saqlash
+Backendda JWT, MongoDB va Express asosida API namunasi
+Texnologiyalar
+React
+TypeScript
+Vite
+Tailwind CSS
+shadcn-ui
+Express
+MongoDB
+JWT
+Loyihani ishga tushirish
+Frontend
+npm install
+cp .env.example .env
 npm run dev
-```
+Frontend odatda quyidagi manzilda ishga tushadi:
 
-**Edit a file directly in GitHub**
+http://localhost:8080
+.env faylida quyidagi qiymatlarni sozlang:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=google_client_id
+VITE_TELEGRAM_BOT_USERNAME=telegram_bot_username
+Backend
+cd server
+npm install
+cp .env.example .env
+npm run dev
+server/.env faylida quyidagi qiymatlarni sozlang:
 
-**Use GitHub Codespaces**
+PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/xarajat_taqsimlagich
+JWT_SECRET=mustahkam_maxfiy_kalit
+CLIENT_URL=http://localhost:8080
+GOOGLE_CLIENT_ID=google_client_id
+TELEGRAM_BOT_TOKEN=telegram_bot_token
+Autentifikatsiya sozlamalari
+Google orqali kirish ishlashi uchun Google Cloud Console'da OAuth Client ID yarating va frontend hamda backend .env fayllariga bir xil GOOGLE_CLIENT_ID qiymatini kiriting.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Telegram orqali kirish ishlashi uchun BotFather orqali bot yarating, domenni sozlang va backend .env fayliga TELEGRAM_BOT_TOKEN, frontend .env fayliga esa VITE_TELEGRAM_BOT_USERNAME qiymatini kiriting.
 
-## What technologies are used for this project?
+Muhim fayllar
+src/pages/Login.tsx - login va ro'yxatdan o'tish sahifasi
+src/lib/auth.tsx - frontend autentifikatsiya provider'i
+src/lib/settlement.ts - balans va qarzlarni soddalashtirish algoritmi
+src/lib/storage.ts - prototip ma'lumotlarni saqlash yordamchilari
+server/src/routes/auth.routes.js - email, Google va Telegram autentifikatsiya endpointlari
+server/src/routes/group.routes.js - guruh, xarajat va hisob-kitob API endpointlari
+server/src/models/User.js - foydalanuvchi modeli
+README_BMI_LOYIHA.md - BMI uchun qisqa ishga tushirish yo'riqnomasi
+Build va tekshirish
+npm run build
+npm run lint
+Backend fayllarini sintaksis bo'yicha tekshirish:
 
-This project is built with:
+node --check server/src/server.js
+node --check server/src/routes/auth.routes.js
+GitHub
+Repository manzili:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4854fd22-685d-4157-bf56-4fc7c61265cd) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-
-## BMI uchun qo'shilgan fayllar
-
-- `src/lib/settlement.ts` - balans va qarzlarni soddalashtirish algoritmi.
-- `src/lib/storage.ts` - localStorage orqali prototip ma'lumotlarini saqlash.
-- `src/types/index.ts` - TypeScript turlari.
-- `server/` - Express + MongoDB backend namunasi.
-- `.env.example` va `server/.env.example` - Google va Telegram autentifikatsiyasi uchun kerakli sozlamalar.
-- `README_BMI_LOYIHA.md` - ishga tushirish bo'yicha qisqa yo'riqnoma.
+https://github.com/kamoliddinravshan/guruh-pul-hisobi.git
