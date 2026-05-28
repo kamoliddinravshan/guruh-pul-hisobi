@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Calendar, Plus, Receipt, Scale, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { Group, Expense, Debt } from '@/types';
 
 interface GroupCardProps {
@@ -136,6 +137,11 @@ export const GroupCard = ({ group, onAddExpense, expenses, debts }: GroupCardPro
 
         {/* Actions */}
         <div className="flex gap-2 pt-2">
+          <Button asChild variant="outline" className="flex-1 border-slate-300 bg-white">
+            <Link to={`/groups/${group.id}`}>
+              Batafsil
+            </Link>
+          </Button>
           <Button 
             onClick={onAddExpense}
             className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"

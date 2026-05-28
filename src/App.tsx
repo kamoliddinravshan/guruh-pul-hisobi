@@ -10,8 +10,11 @@ import { AppShell } from "@/components/AppShell";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Groups from "./pages/Groups";
+import GroupDetail from "./pages/GroupDetail";
 import Debts from "./pages/Debts";
 import Activity from "./pages/Activity";
+import Reports from "./pages/Reports";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,8 +45,11 @@ const App = () => (
             >
               <Route index element={<Dashboard />} />
               <Route path="groups" element={<Groups />} />
+              <Route path="groups/:groupId" element={<GroupDetail />} />
               <Route path="debts" element={<Debts />} />
               <Route path="activity" element={<Activity />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

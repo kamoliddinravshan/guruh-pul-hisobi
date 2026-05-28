@@ -1,6 +1,6 @@
 # Guruh xarajatlarini taqsimlash veb-ilovasi
 
-Bu loyiha BMI uchun tayyorlangan web-ilova prototipi va server namunalaridan iborat.
+Bu loyiha guruh xarajatlarini hisoblash, qarzlarni soddalashtirish va hisobot olish uchun tayyorlangan web-ilova.
 
 ## Frontend
 
@@ -10,22 +10,29 @@ cp .env.example .env
 npm run dev
 ```
 
-Frontend React + TypeScript + Vite asosida ishlaydi. Prototip ma'lumotlarni `localStorage`da saqlaydi.
-Google orqali kirish uchun `.env` faylida `VITE_GOOGLE_CLIENT_ID` qiymatini kiriting.
+Frontend React + TypeScript + Vite asosida ishlaydi. Google orqali kirish uchun `.env` faylida `VITE_GOOGLE_CLIENT_ID` qiymatini kiriting.
 
-## Backend namunasi
+## Backend
+
+Backend Python Django + PostgreSQL asosida yozildi.
 
 ```bash
 cd server
-npm install
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 cp .env.example .env
-npm run dev
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000
 ```
 
-Backend Express + MongoDB + JWT asosida yozildi. U guruhlar, xarajatlar va qarzlarni soddalashtirish API endpointlarini beradi.
-Google autentifikatsiyasi uchun `GOOGLE_CLIENT_ID` sozlanishi kerak.
-MongoDB ishlamasa, backend auth ma'lumotlarini vaqtincha `server/data/users.json` faylida saqlab ishga tushadi.
+`server/.env` faylida PostgreSQL va `GOOGLE_CLIENT_ID` sozlamalarini kiriting.
 
-## Asosiy algoritm
+## Asosiy imkoniyatlar
 
-`src/lib/settlement.ts` faylida balanslarni hisoblash va qarzlarni minimal tranzaksiyalarga qisqartirish algoritmi yozilgan.
+- Sidebar va mobile responsive navigatsiya
+- Guruhlar, qarzlar, faoliyat, hisobotlar va profil sahifalari
+- Guruh ichki sahifasi va a'zolar balansi
+- Qidiruv, filter, CSV export va chop etish
+- Qarzlarni "to'landi" deb belgilash
+- Django API va PostgreSQL bazasi

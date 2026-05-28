@@ -8,9 +8,10 @@ import type { Debt, Group } from '@/types';
 interface DebtSummaryProps {
   debts: Debt[];
   groups: Group[];
+  onMarkPaid?: (debt: Debt) => void;
 }
 
-export const DebtSummary = ({ debts, groups }: DebtSummaryProps) => {
+export const DebtSummary = ({ debts, groups, onMarkPaid }: DebtSummaryProps) => {
   const formatCurrency = (amount: number) => {
     return `${amount.toLocaleString()} so'm`;
   };
@@ -106,6 +107,7 @@ export const DebtSummary = ({ debts, groups }: DebtSummaryProps) => {
                   size="sm"
                   variant="outline"
                   className="h-8 border-slate-300 bg-white text-xs text-slate-700"
+                  onClick={() => onMarkPaid?.(debt)}
                 >
                   To'landi deb belgilash
                 </Button>

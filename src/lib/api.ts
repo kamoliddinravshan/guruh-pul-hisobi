@@ -1,12 +1,24 @@
+import { AUTH_KEY } from '@/lib/auth-context';
+
 function getApiBaseUrls() {
   if (import.meta.env.VITE_API_URL) return [import.meta.env.VITE_API_URL];
   return [
     `${window.location.protocol}//${window.location.hostname}:5000/api`,
     `${window.location.protocol}//${window.location.hostname}:5050/api`,
+    `${window.location.protocol}//${window.location.hostname}:8000/api`,
   ];
 }
 
 const API_BASE_URLS = getApiBaseUrls();
+
+function getAuthToken() {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    return raw ? JSON.parse(raw).token : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   let lastNetworkError: unknown;
@@ -18,6 +30,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
         ...options,
         headers: {
           'Content-Type': 'application/json',
+          ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
           ...(options.headers || {}),
         },
       });

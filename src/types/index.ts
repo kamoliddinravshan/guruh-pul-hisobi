@@ -32,6 +32,15 @@ export interface Debt {
   groupId: string;
 }
 
+export interface Settlement {
+  id: string;
+  groupId: string;
+  from: string;
+  to: string;
+  amount: number;
+  paidAt: Date;
+}
+
 export interface BalanceRow {
   member: string;
   paid: number;

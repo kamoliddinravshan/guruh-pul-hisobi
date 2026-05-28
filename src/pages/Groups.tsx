@@ -1,13 +1,20 @@
+import { useState } from 'react';
 import { Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/PageHeader';
 import { GroupCard } from '@/components/GroupCard';
 import { useAppData } from '@/lib/use-app-data';
 
 export default function Groups() {
   const { groups, expenses, debts, openCreateGroup, openExpenseModal } = useAppData();
+  const [query, setQuery] = useState('');
+  const filteredGroups = groups.filter((group) => {
+    const value = `${group.name} ${group.description} ${group.members.join(' ')}`.toLowerCase();
+    return value.includes(query.toLowerCase());
+  });
 
   return (
     <div className="space-y-6">
@@ -22,7 +29,7 @@ export default function Groups() {
         }
       />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-normal">Barcha guruhlar</h2>
           <p className="text-sm text-slate-500">Guruh tanlab xarajat qo'shing yoki qarz holatini ko'ring.</p>
@@ -31,6 +38,13 @@ export default function Groups() {
           {groups.length} guruh
         </Badge>
       </div>
+
+      <Input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Guruh yoki a'zo bo'yicha qidirish"
+        className="h-11 max-w-xl border-slate-300 bg-white"
+      />
 
       {groups.length === 0 ? (
         <Card className="border-dashed border-slate-300 bg-white">
@@ -50,7 +64,7 @@ export default function Groups() {
         </Card>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
-          {groups.map((group) => (
+          {filteredGroups.map((group) => (
             <GroupCard
               key={group.id}
               group={group}

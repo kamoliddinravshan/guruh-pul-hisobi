@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, Clock, LogOut, Menu, Plus, Receipt, Scale, UserCircle, Users, Wallet } from 'lucide-react';
+import { BarChart3, Clock, FileDown, LogOut, Menu, Plus, Receipt, Scale, Settings, UserCircle, Users, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { CreateGroupModal } from '@/components/CreateGroupModal';
@@ -14,6 +14,8 @@ const navItems = [
   { to: '/groups', label: 'Guruhlar', icon: Users },
   { to: '/debts', label: 'Qarzlar', icon: Scale },
   { to: '/activity', label: 'Faoliyat', icon: Clock },
+  { to: '/reports', label: 'Hisobotlar', icon: FileDown },
+  { to: '/profile', label: 'Profil', icon: Settings },
 ];
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
@@ -141,10 +143,32 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 py-5 sm:px-5 lg:px-6">
+        <main className="mx-auto max-w-7xl px-4 pb-24 pt-5 sm:px-5 lg:px-6 lg:pb-5">
           <Outlet />
         </main>
       </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-white px-2 py-1 shadow-lg lg:hidden">
+        {navItems.slice(0, 5).map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center gap-1 rounded-md px-1 py-2 text-[11px] font-medium',
+                  isActive ? 'text-emerald-700' : 'text-slate-500'
+                )
+              }
+            >
+              <Icon className="h-4 w-4" />
+              <span className="truncate">{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
 
       <CreateGroupModal isOpen={isCreateGroupOpen} onClose={closeCreateGroup} onCreate={handleCreateGroup} />
       <ExpenseModal

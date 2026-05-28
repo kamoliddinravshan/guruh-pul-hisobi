@@ -6,7 +6,7 @@ import { DebtSummary } from '@/components/DebtSummary';
 import { useAppData } from '@/lib/use-app-data';
 
 export default function Debts() {
-  const { groups, debts, openExpenseModal } = useAppData();
+  const { groups, debts, openExpenseModal, markDebtPaid } = useAppData();
 
   return (
     <div className="space-y-6">
@@ -28,7 +28,7 @@ export default function Debts() {
       <StatsGrid />
 
       <div className="max-w-3xl">
-        <DebtSummary debts={debts} groups={groups} />
+        <DebtSummary debts={debts} groups={groups} onMarkPaid={markDebtPaid} />
       </div>
     </div>
   );
