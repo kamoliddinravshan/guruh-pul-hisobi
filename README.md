@@ -1,72 +1,146 @@
-Guruh Pul Hisobi
-Guruh Pul Hisobi - do'stlar, oila a'zolari yoki jamoa bilan qilingan xarajatlarni yozib borish, ulushlarni hisoblash va qarzlarni soddalashtirish uchun web-ilova.
+# Xarajat Taqsimlagich
 
-Imkoniyatlar
-Guruh yaratish va guruh a'zolari bilan xarajatlarni boshqarish
-Xarajat summasi, to'lovchi, ishtirokchilar va kategoriya bo'yicha yozuv qo'shish
-Har bir guruh uchun umumiy xarajatlarni ko'rish
-Kim kimga qancha to'lashi kerakligini avtomatik hisoblash
-Qarzlarni minimal tranzaksiyalarga qisqartirish
-Email/parol, Google va Telegram orqali autentifikatsiya
-Frontendda prototip ma'lumotlarni localStorage orqali saqlash
-Backendda JWT, MongoDB va Express asosida API namunasi
-Texnologiyalar
-React
-TypeScript
-Vite
-Tailwind CSS
-shadcn-ui
-Express
-MongoDB
-JWT
-Loyihani ishga tushirish
-Frontend
-npm install
-cp .env.example .env
-npm run dev
-Frontend odatda quyidagi manzilda ishga tushadi:
+Xarajat Taqsimlagich - do'stlar, talabalar va oilalar uchun guruh xarajatlarini shaffof boshqarish, ulushlarni avtomatik hisoblash va qarzlarni minimal to'lovlarga qisqartirish web-ilovasi.
 
-http://localhost:8080
-.env faylida quyidagi qiymatlarni sozlang:
+## Texnologiyalar
 
-VITE_API_URL=http://localhost:5000/api
-VITE_GOOGLE_CLIENT_ID=google_client_id
-VITE_TELEGRAM_BOT_USERNAME=telegram_bot_username
-Backend
+- Frontend: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Zustand, TanStack Query, Axios
+- Backend: Python 3.12, Django 5, Django REST Framework, SimpleJWT
+- Data: PostgreSQL 16, Redis 7, Celery
+- Docs: drf-spectacular, Swagger `/api/docs/`
+- Deploy: Gunicorn, Nginx, Docker Compose
+
+## Tuzilma
+
+```text
+server/
+  config/settings/        Django base/development/production settings
+  apps/accounts/          CustomUser, register/login/me/logout
+  apps/groups/            Group, Membership, invite/join/leave
+  apps/expenses/          Expense, ExpenseSplit, debt simplification
+  apps/settlements/       Settlement, settle-up history
+  core/                   API response, pagination, exceptions, utils
+  docker/                 Backend Dockerfile and Nginx config
+src/
+  features/               Auth, groups, expenses, settlements, dashboard APIs/components
+  shared/                 API client, hooks, utils, types
+  stores/                 Zustand slices
+```
+
+## Backendni ishga tushirish
+
+```bash
 cd server
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver 0.0.0.0:8000
+```
+
+`server/.env`:
+
+```env
+SECRET_KEY=change-me-minimum-50-random-characters-for-production
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+DATABASE_URL=postgresql://xarajat:xarajat@localhost:5432/xarajat_db
+REDIS_URL=redis://localhost:6379/1
+CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+```
+
+PostgreSQL bazasini yarating:
+
+```bash
+createdb xarajat_db
+```
+
+## Frontendni ishga tushirish
+
+```bash
 npm install
 cp .env.example .env
 npm run dev
-server/.env faylida quyidagi qiymatlarni sozlang:
+```
 
-PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/xarajat_taqsimlagich
-JWT_SECRET=mustahkam_maxfiy_kalit
-CLIENT_URL=http://localhost:8080
-GOOGLE_CLIENT_ID=google_client_id
-TELEGRAM_BOT_TOKEN=telegram_bot_token
-Autentifikatsiya sozlamalari
-Google orqali kirish ishlashi uchun Google Cloud Console'da OAuth Client ID yarating va frontend hamda backend .env fayllariga bir xil GOOGLE_CLIENT_ID qiymatini kiriting.
+`.env`:
 
-Telegram orqali kirish ishlashi uchun BotFather orqali bot yarating, domenni sozlang va backend .env fayliga TELEGRAM_BOT_TOKEN, frontend .env fayliga esa VITE_TELEGRAM_BOT_USERNAME qiymatini kiriting.
+```env
+VITE_API_URL=http://localhost:8000/api/v1
+```
 
-Muhim fayllar
-src/pages/Login.tsx - login va ro'yxatdan o'tish sahifasi
-src/lib/auth.tsx - frontend autentifikatsiya provider'i
-src/lib/settlement.ts - balans va qarzlarni soddalashtirish algoritmi
-src/lib/storage.ts - prototip ma'lumotlarni saqlash yordamchilari
-server/src/routes/auth.routes.js - email, Google va Telegram autentifikatsiya endpointlari
-server/src/routes/group.routes.js - guruh, xarajat va hisob-kitob API endpointlari
-server/src/models/User.js - foydalanuvchi modeli
-README_BMI_LOYIHA.md - BMI uchun qisqa ishga tushirish yo'riqnomasi
-Build va tekshirish
+## API endpointlar
+
+- `POST /api/v1/auth/register/`
+- `POST /api/v1/auth/login/`
+- `POST /api/v1/auth/token/refresh/`
+- `POST /api/v1/auth/logout/`
+- `GET/PATCH /api/v1/auth/me/`
+- `GET/POST /api/v1/groups/`
+- `GET/PATCH/DELETE /api/v1/groups/{id}/`
+- `POST /api/v1/groups/{id}/invite/`
+- `POST /api/v1/groups/join/{code}/`
+- `DELETE /api/v1/groups/{id}/leave/`
+- `GET/POST /api/v1/groups/{id}/expenses/`
+- `GET/PATCH/DELETE /api/v1/expenses/{id}/`
+- `GET /api/v1/groups/{id}/balances/`
+- `GET /api/v1/groups/{id}/settlements/`
+- `POST /api/v1/groups/{id}/settle/`
+- `GET /api/v1/groups/{id}/history/`
+
+## Test
+
+Backend:
+
+```bash
+cd server
+pytest
+```
+
+Frontend:
+
+```bash
+npm run test
 npm run build
 npm run lint
-Backend fayllarini sintaksis bo'yicha tekshirish:
+```
 
-node --check server/src/server.js
-node --check server/src/routes/auth.routes.js
-GitHub
-Repository manzili:
+## Docker
 
-https://github.com/kamoliddinravshan/guruh-pul-hisobi.git
+Root papkada `.env` yarating:
+
+```env
+SECRET_KEY=judayam_uzun_random_secret_key_kamida_50_belgi
+DB_PASSWORD=XarajatDB_2026!Ravshanov
+ALLOWED_HOSTS=localhost,127.0.0.1,SERVER_IP,yourdomain.uz,www.yourdomain.uz
+CORS_ALLOWED_ORIGINS=http://SERVER_IP,https://yourdomain.uz,https://www.yourdomain.uz
+VITE_API_URL=/api/v1
+SECURE_SSL_REDIRECT=False
+```
+
+Ishga tushirish:
+
+```bash
+docker compose up -d --build
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createsuperuser
+```
+
+Servislar:
+
+- Frontend/Nginx: `http://localhost`
+- Backend API: `http://localhost/api/v1`
+- Swagger: `http://localhost/api/docs/`
+
+## English Setup
+
+Xarajat Taqsimlagich is a production-oriented expense splitting app for Uzbek users. Run PostgreSQL and Redis locally, install backend requirements from `server/requirements.txt`, migrate the database, then start Django on port `8000`. The frontend runs with Vite on port `8080` and consumes `/api/v1`.
+
+For Docker-based development, set `SECRET_KEY`, `DB_PASSWORD`, `ALLOWED_HOSTS`, and `CORS_ALLOWED_ORIGINS`, then run:
+
+```bash
+docker compose up --build
+```

@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { AlertCircle, Loader2, LockKeyhole, LogIn, Mail, Send, UserPlus } from 'lucide-react';
+import { AlertCircle, Loader2, LockKeyhole, LogIn, Mail, Send, User, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,8 +23,21 @@ declare global {
   }
 }
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const telegramBotUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
+function isConfigured(value: string | undefined, placeholder: string) {
+  return Boolean(value && value !== placeholder && !value.startsWith('your_'));
+}
+
+const googleClientId = isConfigured(
+  import.meta.env.VITE_GOOGLE_CLIENT_ID,
+  'your_google_oauth_client_id.apps.googleusercontent.com'
+)
+  ? import.meta.env.VITE_GOOGLE_CLIENT_ID
+  : '';
+const telegramBotUsername = isConfigured(import.meta.env.VITE_TELEGRAM_BOT_USERNAME, 'your_bot_username')
+  ? import.meta.env.VITE_TELEGRAM_BOT_USERNAME
+  : '';
+const inputClass =
+  'h-11 border-slate-300 bg-white text-left text-slate-950 shadow-sm placeholder:text-slate-400 focus-visible:border-emerald-500 focus-visible:ring-emerald-500';
 
 const Login = () => {
   const { isAuthenticated, login, register, loginWithGoogle, loginWithTelegram } = useAuth();
@@ -75,6 +88,7 @@ const Login = () => {
     script.async = true;
     script.defer = true;
     script.onload = renderGoogleButton;
+    script.onerror = () => setError('Google login skripti yuklanmadi. Internet yoki Google OAuth sozlamalarini tekshiring.');
     document.head.appendChild(script);
   }, [loginWithGoogle]);
 
@@ -101,6 +115,7 @@ const Login = () => {
     script.setAttribute('data-size', 'large');
     script.setAttribute('data-radius', '8');
     script.setAttribute('data-userpic', 'false');
+    script.setAttribute('data-request-access', 'write');
     script.setAttribute('data-onauth', 'onTelegramAuth(user)');
     telegramButtonRef.current.appendChild(script);
 
@@ -113,12 +128,14 @@ const Login = () => {
     event.preventDefault();
     setError('');
     setIsSubmitting(true);
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
 
     try {
       if (activeTab === 'register') {
-        await register(name, email, password);
+        await register(trimmedName, trimmedEmail, password);
       } else {
-        await login(email, password);
+        await login(trimmedEmail, password);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Autentifikatsiyada xatolik yuz berdi');
@@ -127,10 +144,19 @@ const Login = () => {
     }
   };
 
+  const showProviderSetupError = (provider: 'Google' | 'Telegram') => {
+    if (provider === 'Google') {
+      setError('Google orqali kirish uchun .env faylida VITE_GOOGLE_CLIENT_ID va server/.env faylida GOOGLE_CLIENT_ID sozlanishi kerak.');
+      return;
+    }
+
+    setError('Telegram orqali kirish uchun .env faylida VITE_TELEGRAM_BOT_USERNAME va server/.env faylida TELEGRAM_BOT_TOKEN sozlanishi kerak.');
+  };
+
   if (isAuthenticated) return <Navigate to="/" replace />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 px-4 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-sky-50 to-violet-50 px-4 py-8 text-left">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl items-center justify-center">
         <div className="grid w-full gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
           <div className="space-y-5">
@@ -147,10 +173,10 @@ const Login = () => {
             </div>
           </div>
 
-          <Card className="border bg-white/90 shadow-xl backdrop-blur">
+          <Card className="border-slate-200 bg-white shadow-xl">
             <CardHeader>
-              <CardTitle>Hisobga kirish</CardTitle>
-              <CardDescription>Davom etish uchun qulay autentifikatsiya usulini tanlang.</CardDescription>
+              <CardTitle className="text-2xl text-slate-950">Hisobga kirish</CardTitle>
+              <CardDescription className="text-slate-600">Davom etish uchun qulay autentifikatsiya usulini tanlang.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               {error && (
@@ -161,7 +187,7 @@ const Login = () => {
               )}
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid h-11 w-full grid-cols-2 bg-slate-100">
                   <TabsTrigger value="login">Kirish</TabsTrigger>
                   <TabsTrigger value="register">Ro'yxatdan o'tish</TabsTrigger>
                 </TabsList>
@@ -171,13 +197,15 @@ const Login = () => {
                     <div className="space-y-2">
                       <Label htmlFor="login-email">Email</Label>
                       <div className="relative">
-                        <Mail className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Mail className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
                         <Input
                           id="login-email"
                           type="email"
-                          className="pl-9"
+                          className={`${inputClass} pl-9`}
+                          placeholder="email@example.com"
                           value={email}
                           onChange={(event) => setEmail(event.target.value)}
+                          autoComplete="email"
                           required
                         />
                       </div>
@@ -185,13 +213,15 @@ const Login = () => {
                     <div className="space-y-2">
                       <Label htmlFor="login-password">Parol</Label>
                       <div className="relative">
-                        <LockKeyhole className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <LockKeyhole className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
                         <Input
                           id="login-password"
                           type="password"
-                          className="pl-9"
+                          className={`${inputClass} pl-9`}
+                          placeholder="Parolingiz"
                           value={password}
                           onChange={(event) => setPassword(event.target.value)}
+                          autoComplete="current-password"
                           required
                         />
                       </div>
@@ -207,28 +237,51 @@ const Login = () => {
                   <form onSubmit={handlePasswordAuth} className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="register-name">Ism</Label>
-                      <Input id="register-name" value={name} onChange={(event) => setName(event.target.value)} required />
+                      <div className="relative">
+                        <User className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
+                        <Input
+                          id="register-name"
+                          className={`${inputClass} pl-9`}
+                          placeholder="Ismingiz"
+                          value={name}
+                          onChange={(event) => setName(event.target.value)}
+                          autoComplete="name"
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="register-email">Email</Label>
-                      <Input
-                        id="register-email"
-                        type="email"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
+                        <Input
+                          id="register-email"
+                          type="email"
+                          className={`${inputClass} pl-9`}
+                          placeholder="email@example.com"
+                          value={email}
+                          onChange={(event) => setEmail(event.target.value)}
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="register-password">Parol</Label>
-                      <Input
-                        id="register-password"
-                        type="password"
-                        minLength={6}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <LockKeyhole className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
+                        <Input
+                          id="register-password"
+                          type="password"
+                          minLength={6}
+                          className={`${inputClass} pl-9`}
+                          placeholder="Kamida 6 ta belgi"
+                          value={password}
+                          onChange={(event) => setPassword(event.target.value)}
+                          autoComplete="new-password"
+                          required
+                        />
+                      </div>
                     </div>
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
@@ -251,18 +304,18 @@ const Login = () => {
                 {googleClientId ? (
                   <div className="flex min-h-11 justify-center" ref={googleButtonRef} />
                 ) : (
-                  <Button variant="outline" className="w-full" disabled>
+                  <Button variant="outline" className="w-full border-slate-300 bg-white text-slate-900" onClick={() => showProviderSetupError('Google')}>
                     <LogIn className="h-4 w-4" />
-                    Google sozlanmagan
+                    Google orqali kirish
                   </Button>
                 )}
 
                 {telegramBotUsername ? (
                   <div className="flex min-h-11 justify-center" ref={telegramButtonRef} />
                 ) : (
-                  <Button variant="outline" className="w-full" disabled>
+                  <Button variant="outline" className="w-full border-slate-300 bg-white text-slate-900" onClick={() => showProviderSetupError('Telegram')}>
                     <Send className="h-4 w-4" />
-                    Telegram sozlanmagan
+                    Telegram orqali kirish
                   </Button>
                 )}
               </div>

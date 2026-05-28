@@ -2,12 +2,22 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { User } from '../models/User.js';
+import {
+  createUser,
+  findUserByEmail,
+  findUserByGoogleOrEmail,
+  findUserByTelegramId,
+  updateUser,
+} from '../services/userStore.js';
 
 const router = express.Router();
 
 function createToken(user) {
   return jwt.sign({ id: user._id, email: user.email || null }, process.env.JWT_SECRET, { expiresIn: '7d' });
+}
+
+function isConfigured(value, placeholder) {
+  return Boolean(value && value !== placeholder && !value.startsWith('your_'));
 }
 
 function publicUser(user) {
@@ -28,16 +38,16 @@ router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) return res.status(400).json({ message: 'Barcha maydonlar to\'ldirilishi shart' });
   const normalizedEmail = email.toLowerCase().trim();
-  const exists = await User.findOne({ email: normalizedEmail });
+  const exists = await findUserByEmail(normalizedEmail);
   if (exists) return res.status(409).json({ message: 'Bu email avval ro\'yxatdan o\'tgan' });
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = await User.create({ name, email: normalizedEmail, passwordHash });
+  const user = await createUser({ name, email: normalizedEmail, passwordHash });
   res.status(201).json(authResponse(user));
 });
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email: email?.toLowerCase().trim() });
+  const user = await findUserByEmail(email?.toLowerCase().trim());
   if (!user) return res.status(401).json({ message: 'Email yoki parol noto\'g\'ri' });
   if (!user.passwordHash) return res.status(401).json({ message: 'Bu hisob Google yoki Telegram orqali ochilgan' });
   const ok = await bcrypt.compare(password, user.passwordHash);
@@ -48,7 +58,9 @@ router.post('/login', async (req, res) => {
 router.post('/google', async (req, res) => {
   const { credential } = req.body;
   if (!credential) return res.status(400).json({ message: 'Google token topilmadi' });
-  if (!process.env.GOOGLE_CLIENT_ID) return res.status(500).json({ message: 'GOOGLE_CLIENT_ID sozlanmagan' });
+  if (!isConfigured(process.env.GOOGLE_CLIENT_ID, 'your_google_oauth_client_id.apps.googleusercontent.com')) {
+    return res.status(500).json({ message: 'GOOGLE_CLIENT_ID sozlanmagan' });
+  }
 
   const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
   const profile = await response.json();
@@ -60,15 +72,15 @@ router.post('/google', async (req, res) => {
 
   const googleId = profile.sub;
   const email = profile.email?.toLowerCase().trim();
-  let user = await User.findOne({ $or: [{ 'providers.googleId': googleId }, { email }] });
+  let user = await findUserByGoogleOrEmail(googleId, email);
 
   if (user) {
     user.providers = { ...(user.providers || {}), googleId };
     user.email = user.email || email;
     user.avatarUrl = profile.picture || user.avatarUrl;
-    await user.save();
+    user = await updateUser(user);
   } else {
-    user = await User.create({
+    user = await createUser({
       name: profile.name || email,
       email,
       avatarUrl: profile.picture,
@@ -83,7 +95,9 @@ router.post('/telegram', async (req, res) => {
   const data = req.body || {};
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
-  if (!botToken) return res.status(500).json({ message: 'TELEGRAM_BOT_TOKEN sozlanmagan' });
+  if (!isConfigured(botToken, '123456789:your_telegram_bot_token')) {
+    return res.status(500).json({ message: 'TELEGRAM_BOT_TOKEN sozlanmagan' });
+  }
   if (!data.id || !data.auth_date || !data.hash) return res.status(400).json({ message: 'Telegram ma\'lumotlari to\'liq emas' });
 
   const authAgeSeconds = Math.floor(Date.now() / 1000) - Number(data.auth_date);
@@ -106,7 +120,7 @@ router.post('/telegram', async (req, res) => {
 
   const telegramId = String(data.id);
   const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || data.username || `Telegram ${telegramId}`;
-  let user = await User.findOne({ 'providers.telegramId': telegramId });
+  let user = await findUserByTelegramId(telegramId);
 
   if (user) {
     user.name = user.name || name;
@@ -116,9 +130,9 @@ router.post('/telegram', async (req, res) => {
       telegramId,
       telegramUsername: data.username,
     };
-    await user.save();
+    user = await updateUser(user);
   } else {
-    user = await User.create({
+    user = await createUser({
       name,
       avatarUrl: data.photo_url,
       providers: {
