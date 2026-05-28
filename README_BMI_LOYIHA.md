@@ -24,6 +24,7 @@ npm run dev
 
 Backend Express + MongoDB + JWT asosida yozildi. U guruhlar, xarajatlar va qarzlarni soddalashtirish API endpointlarini beradi.
 Google autentifikatsiyasi uchun `GOOGLE_CLIENT_ID`, Telegram autentifikatsiyasi uchun esa `TELEGRAM_BOT_TOKEN` sozlanishi kerak.
+MongoDB ishlamasa, backend auth ma'lumotlarini vaqtincha `server/data/users.json` faylida saqlab ishga tushadi.
 
 ## Asosiy algoritm
 

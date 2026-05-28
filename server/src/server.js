@@ -36,11 +36,27 @@ app.get('/api/health', (_req, res) =>
 app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupRoutes);
 
-const port = process.env.PORT || 5000;
+const port = Number(process.env.PORT || 5000);
+
+function listen(portToUse, attemptsLeft = 10) {
+  const server = app.listen(portToUse, '0.0.0.0', () => console.log(`API ${portToUse}-portda ishga tushdi`));
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE' && attemptsLeft > 0) {
+      const nextPort = portToUse === 5000 ? 5050 : portToUse + 1;
+      console.warn(`${portToUse}-port band. API ${nextPort}-portda qayta urinadi.`);
+      listen(nextPort, attemptsLeft - 1);
+      return;
+    }
+
+    throw error;
+  });
+}
+
 connectDB()
   .then((connected) => {
     isMongoConnected = connected;
-    app.listen(port, '0.0.0.0', () => console.log(`API ${port}-portda ishga tushdi`));
+    listen(port);
   })
   .catch((error) => {
     console.error(error);
