@@ -20,7 +20,19 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+			},
 			colors: {
+				fintech: {
+					primary: '#2563EB',
+					success: '#16A34A',
+					danger: '#DC2626',
+					warning: '#D97706',
+					neutral: '#64748B',
+					surface: '#F8FAFC',
+					card: '#FFFFFF',
+				},
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

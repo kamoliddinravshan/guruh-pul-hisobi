@@ -1,15 +1,18 @@
-from django.urls import path
-from api import views
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
-    path("api/health", views.health),
-    path("api/auth/register", views.register),
-    path("api/auth/login", views.login),
-    path("api/auth/google", views.google_login),
-    path("api/groups", views.groups),
-    path("api/groups/<int:group_id>", views.group_detail),
-    path("api/groups/<int:group_id>/expenses", views.group_expenses),
-    path("api/groups/<int:group_id>/settlements", views.group_settlements),
-    path("api/settlements", views.settlements),
-    path("api/reports/summary", views.report_summary),
+    path('admin/', admin.site.urls),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/v1/auth/', include('apps.accounts.urls')),
+    path('api/v1/', include('apps.groups.urls')),
+    path('api/v1/', include('apps.expenses.urls')),
+    path('api/v1/', include('apps.settlements.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

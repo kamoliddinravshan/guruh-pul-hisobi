@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AlertCircle, Loader2, LockKeyhole, LogIn, Mail, User, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,84 +9,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/use-auth';
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (options: { client_id: string; callback: (response: { credential: string }) => void }) => void;
-          renderButton: (element: HTMLElement, options: Record<string, string>) => void;
-        };
-      };
-    };
-  }
-}
-
-function isConfigured(value: string | undefined, placeholder: string) {
-  return Boolean(value && value !== placeholder && !value.startsWith('your_'));
-}
-
-const googleClientId = isConfigured(
-  import.meta.env.VITE_GOOGLE_CLIENT_ID,
-  'your_google_oauth_client_id.apps.googleusercontent.com'
-)
-  ? import.meta.env.VITE_GOOGLE_CLIENT_ID
-  : '';
 const inputClass =
   'h-11 border-slate-300 bg-white text-left text-slate-950 shadow-sm placeholder:text-slate-400 focus-visible:border-emerald-500 focus-visible:ring-emerald-500';
 
 const Login = () => {
-  const { isAuthenticated, login, register, loginWithGoogle } = useAuth();
+  const { isAuthenticated, login, register } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const googleButtonRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!googleClientId || !googleButtonRef.current) return;
-
-    const renderGoogleButton = () => {
-      if (!window.google || !googleButtonRef.current) return;
-      googleButtonRef.current.innerHTML = '';
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: async ({ credential }) => {
-          setError('');
-          setIsSubmitting(true);
-          try {
-            await loginWithGoogle(credential);
-          } catch (err) {
-            setError(err instanceof Error ? err.message : 'Google orqali kirishda xatolik yuz berdi');
-          } finally {
-            setIsSubmitting(false);
-          }
-        },
-      });
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        width: '320',
-        text: 'continue_with',
-      });
-    };
-
-    if (window.google) {
-      renderGoogleButton();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = renderGoogleButton;
-    script.onerror = () => setError('Google login skripti yuklanmadi. Internet yoki Google OAuth sozlamalarini tekshiring.');
-    document.head.appendChild(script);
-  }, [loginWithGoogle]);
-
   const handlePasswordAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
@@ -107,10 +40,6 @@ const Login = () => {
     }
   };
 
-  const showGoogleSetupError = () => {
-    setError('Google orqali kirish uchun .env faylida VITE_GOOGLE_CLIENT_ID va server/.env faylida GOOGLE_CLIENT_ID sozlanishi kerak.');
-  };
-
   if (isAuthenticated) return <Navigate to="/" replace />;
 
   return (
@@ -126,7 +55,7 @@ const Login = () => {
                 Xarajatlaringizni xavfsiz hisob bilan boshqaring
               </h1>
               <p className="max-w-xl text-lg text-muted-foreground">
-                Email yoki Google orqali kiring va guruh xarajatlari ma'lumotlarini shaxsiy hisobingizga bog'lang.
+                Email va parol orqali kiring, guruh xarajatlari ma'lumotlarini shaxsiy hisobingizga bog'lang.
               </p>
             </div>
           </div>
@@ -134,7 +63,7 @@ const Login = () => {
           <Card className="border-slate-200 bg-white shadow-xl">
             <CardHeader>
               <CardTitle className="text-2xl text-slate-950">Hisobga kirish</CardTitle>
-              <CardDescription className="text-slate-600">Davom etish uchun qulay autentifikatsiya usulini tanlang.</CardDescription>
+              <CardDescription className="text-slate-600">Davom etish uchun SimpleJWT autentifikatsiyasi ishlatiladi.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               {error && (
@@ -249,25 +178,7 @@ const Login = () => {
                 </TabsContent>
               </Tabs>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">yoki</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {googleClientId ? (
-                  <div className="flex min-h-11 justify-center" ref={googleButtonRef} />
-                ) : (
-                  <Button variant="outline" className="w-full border-slate-300 bg-white text-slate-900" onClick={showGoogleSetupError}>
-                    <LogIn className="h-4 w-4" />
-                    Google orqali kirish
-                  </Button>
-                )}
-              </div>
+              <p className="text-center text-xs text-slate-500">Access token 15 daqiqa, refresh token 7 kun amal qiladi.</p>
             </CardContent>
           </Card>
         </div>
