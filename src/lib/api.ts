@@ -2,6 +2,7 @@ import { AUTH_KEY } from '@/lib/auth-context';
 
 function getApiBaseUrls() {
   if (import.meta.env.VITE_API_URL) return [import.meta.env.VITE_API_URL];
+  if (typeof window === 'undefined') return ['http://localhost:8000/api/v1'];
   return [
     `${window.location.protocol}//${window.location.hostname}:8000/api/v1`,
   ];
@@ -9,7 +10,7 @@ function getApiBaseUrls() {
 
 const API_BASE_URLS = getApiBaseUrls();
 
-function formatApiError(error: unknown): string {
+export function formatApiError(error: unknown): string {
   if (!error) return 'Server bilan aloqa qilishda xatolik yuz berdi';
   if (typeof error === 'string') return error;
   if (Array.isArray(error)) return error.map(formatApiError).join(' ');

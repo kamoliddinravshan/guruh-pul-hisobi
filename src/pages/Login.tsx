@@ -160,9 +160,9 @@ const Login = () => {
                         <Input
                           id="register-password"
                           type="password"
-                          minLength={6}
+                          minLength={4}
                           className={`${inputClass} pl-9`}
-                          placeholder="Kamida 6 ta belgi"
+                          placeholder="Kamida 4 ta belgi"
                           value={password}
                           onChange={(event) => setPassword(event.target.value)}
                           autoComplete="new-password"

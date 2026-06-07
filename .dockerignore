@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.env
+.env.*
+server/.env
+server/.venv
+server/db.sqlite3
+server/media
+server/staticfiles
+server/node_modules
+__pycache__
+*.pyc
+npm-debug.log*
