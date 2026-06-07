@@ -115,11 +115,14 @@ Root papkada `.env` yarating:
 ```env
 SECRET_KEY=judayam_uzun_random_secret_key_kamida_50_belgi
 DB_PASSWORD=XarajatDB_2026!Ravshanov
-ALLOWED_HOSTS=localhost,127.0.0.1,SERVER_IP,yourdomain.uz,www.yourdomain.uz
-CORS_ALLOWED_ORIGINS=http://SERVER_IP,https://yourdomain.uz,https://www.yourdomain.uz
+ALLOWED_HOSTS=*
+CORS_ALLOWED_ORIGINS=http://localhost,http://127.0.0.1,http://SERVER_IP:8090
 VITE_API_URL=/api/v1
+NGINX_PORT=8090
 SECURE_SSL_REDIRECT=False
 ```
+
+`ALLOWED_HOSTS=*` IP orqali test qilishda Django `400 Bad Request` qaytarmasligi uchun qulay. Domen ulangandan keyin uni `SERVER_IP,yourdomain.uz,www.yourdomain.uz` qilib cheklash mumkin.
 
 Ishga tushirish:
 
@@ -134,6 +137,12 @@ Servislar:
 - Frontend/Nginx: `http://localhost`
 - Backend API: `http://localhost/api/v1`
 - Swagger: `http://localhost/api/docs/`
+
+Server IP orqali ochilganda, masalan `NGINX_PORT=8090` bo'lsa:
+
+- Frontend/Nginx: `http://SERVER_IP:8090`
+- Backend API: `http://SERVER_IP:8090/api/v1`
+- Swagger: `http://SERVER_IP:8090/api/docs/`
 
 ## English Setup
 
