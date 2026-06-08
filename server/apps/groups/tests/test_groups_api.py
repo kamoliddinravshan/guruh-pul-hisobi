@@ -40,3 +40,15 @@ class TestGroupsApi:
 
         assert response.status_code == 201
         assert Membership.objects.filter(group=group, user=users['gani']).exists()
+
+    def test_admin_can_add_members_by_name(self, api_client, users, group):
+        api_client.force_authenticate(user=users['ali'])
+
+        response = api_client.post(f'/api/v1/groups/{group.id}/members/', {
+            'members': ['Dilshod', 'Madina'],
+        }, format='json')
+
+        assert response.status_code == 201
+        names = {item['user']['full_name'] for item in response.data['data']['members']}
+        assert {'Dilshod', 'Madina'}.issubset(names)
+        assert Membership.objects.filter(group=group, user__full_name='Dilshod').exists()

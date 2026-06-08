@@ -1,11 +1,14 @@
+import uuid
+
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 
+from apps.accounts.models import CustomUser
 from apps.groups.models import Group, Membership
-from apps.groups.permissions import IsGroupMember, IsGroupOwner
-from apps.groups.serializers import GroupSerializer
+from apps.groups.permissions import IsGroupAdmin, IsGroupMember, IsGroupOwner
+from apps.groups.serializers import AddGroupMembersSerializer, GroupSerializer
 from core.responses import api_response
 
 
@@ -17,6 +20,8 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Group.objects.filter(memberships__user=self.request.user).select_related('created_by').prefetch_related('memberships__user')
 
     def get_permissions(self):
+        if self.action == 'add_members':
+            return [permissions.IsAuthenticated(), IsGroupAdmin()]
         if self.action in ['update', 'partial_update']:
             return [permissions.IsAuthenticated(), IsGroupMember()]
         if self.action == 'destroy':
@@ -60,6 +65,33 @@ class GroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
         self.check_object_permissions(request, group)
         return api_response({'invite_code': group.invite_code, 'invite_url': f'/groups/join/{group.invite_code}/'})
+
+    @action(detail=True, methods=['post'], url_path='members')
+    def add_members(self, request, pk=None):
+        group = self.get_object()
+        self.check_object_permissions(request, group)
+        serializer = AddGroupMembersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            for entry in serializer.get_member_entries():
+                full_name = entry['full_name']
+                email = entry['email'] or f'{uuid.uuid4().hex}@local.xarajat'
+                user, created = CustomUser.objects.get_or_create(
+                    email=email,
+                    defaults={'full_name': full_name},
+                )
+                if created:
+                    user.set_unusable_password()
+                    user.save(update_fields=['password'])
+                Membership.objects.get_or_create(
+                    group=group,
+                    user=user,
+                    defaults={'role': Membership.ROLE_MEMBER},
+                )
+
+        refreshed_group = self.get_queryset().get(pk=group.pk)
+        return api_response(self.get_serializer(refreshed_group).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'], url_path='join/(?P<code>[^/.]+)')
     def join(self, request, code=None):

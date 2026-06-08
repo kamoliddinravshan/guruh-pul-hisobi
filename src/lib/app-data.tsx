@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Debt, Expense, Group, Settlement } from '@/types';
 import { AppDataContext, type AppDataContextValue } from '@/lib/app-data-context';
 import { apiRequest } from '@/lib/api';
+import { toast } from '@/components/ui/use-toast';
 
 const defaultGroups: Group[] = [
   {
@@ -254,15 +255,28 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         currency: 'UZS',
       }),
     })
-      .then((createdGroup) => {
-        const normalizedGroup = normalizeGroup(createdGroup);
+      .then(async (createdGroup) => {
+        const groupWithMembers = groupData.members.length
+          ? await apiRequest<ApiGroup>(`/groups/${createdGroup.id}/members/`, {
+              method: 'POST',
+              body: JSON.stringify({ members: groupData.members }),
+            })
+          : createdGroup;
+        const normalizedGroup = normalizeGroup(groupWithMembers);
         setGroups((currentGroups) =>
           currentGroups.map((group) =>
             group.id === newGroup.id ? normalizedGroup : group
           )
         );
       })
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        setGroups((currentGroups) => currentGroups.filter((group) => group.id !== newGroup.id));
+        toast({
+          title: 'Guruh yaratilmadi',
+          description: error instanceof Error ? error.message : 'Server guruh yaratish so\'rovini qabul qilmadi.',
+          variant: 'destructive',
+        });
+      });
   };
 
   const handleAddExpense = (expenseData: Omit<Expense, 'id' | 'date'>) => {

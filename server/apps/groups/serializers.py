@@ -29,3 +29,44 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class JoinGroupSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=8)
+
+
+class AddGroupMembersSerializer(serializers.Serializer):
+    members = serializers.ListField(
+        child=serializers.CharField(max_length=150, trim_whitespace=True),
+        required=False,
+        allow_empty=False,
+    )
+    full_name = serializers.CharField(max_length=150, required=False, allow_blank=True, trim_whitespace=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        members = attrs.get('members') or []
+        full_name = attrs.get('full_name', '').strip()
+        email = attrs.get('email', '').strip().lower()
+
+        if not members and not full_name and not email:
+            raise serializers.ValidationError('Kamida bitta a’zo ismi yoki email kiritilishi kerak.')
+
+        if members:
+            attrs['members'] = [' '.join(member.split()) for member in members if member.strip()]
+            if not attrs['members']:
+                raise serializers.ValidationError({'members': 'A’zo ismi bo‘sh bo‘lmasligi kerak.'})
+
+        if full_name:
+            attrs['full_name'] = ' '.join(full_name.split())
+        if email:
+            attrs['email'] = email
+
+        return attrs
+
+    def get_member_entries(self):
+        members = self.validated_data.get('members') or []
+        if members:
+            return [{'full_name': member, 'email': ''} for member in members]
+
+        full_name = self.validated_data.get('full_name') or self.validated_data.get('email')
+        return [{
+            'full_name': full_name,
+            'email': self.validated_data.get('email', ''),
+        }]
