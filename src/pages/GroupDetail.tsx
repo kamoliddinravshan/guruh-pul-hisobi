@@ -1,14 +1,19 @@
+import { FormEvent, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Receipt, Scale, Users } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Receipt, Scale, UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
 import { DebtSummary } from '@/components/DebtSummary';
 import { useAppData } from '@/lib/use-app-data';
 
 export default function GroupDetail() {
   const { groupId } = useParams();
-  const { getGroupById, expenses, debts, openExpenseModal, markDebtPaid, formatCurrency } = useAppData();
+  const { getGroupById, expenses, debts, openExpenseModal, markDebtPaid, formatCurrency, addGroupMembers } = useAppData();
+  const [memberName, setMemberName] = useState('');
+  const [isAddingMember, setIsAddingMember] = useState(false);
   const group = groupId ? getGroupById(groupId) : undefined;
 
   if (!group) return <Navigate to="/groups" replace />;
@@ -25,6 +30,30 @@ export default function GroupDetail() {
     }, 0);
     return { member, paid, share, balance: paid - share };
   });
+
+  const handleAddMember = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextMember = memberName.trim();
+    if (!nextMember) return;
+
+    setIsAddingMember(true);
+    try {
+      await addGroupMembers(group.id, [nextMember]);
+      setMemberName('');
+      toast({
+        title: 'A’zo qo‘shildi',
+        description: `${nextMember} guruhga qo‘shildi.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'A’zo qo‘shilmadi',
+        description: error instanceof Error ? error.message : 'Server a’zo qo‘shish so‘rovini qabul qilmadi.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -73,6 +102,33 @@ export default function GroupDetail() {
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg tracking-normal">
+                <UserPlus className="h-5 w-5 text-emerald-700" />
+                A’zo qo‘shish
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddMember} className="flex flex-col gap-3 sm:flex-row">
+                <Input
+                  value={memberName}
+                  onChange={(event) => setMemberName(event.target.value)}
+                  placeholder="Masalan: Ali Valiyev"
+                  className="h-11 border-slate-300 bg-white text-slate-950"
+                />
+                <Button
+                  type="submit"
+                  disabled={!memberName.trim() || isAddingMember}
+                  className="h-11 bg-emerald-600 text-white hover:bg-emerald-700"
+                >
+                  {isAddingMember ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                  Qo‘shish
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
           <Card className="border-slate-200 bg-white shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg tracking-normal">A'zolar balansi</CardTitle>

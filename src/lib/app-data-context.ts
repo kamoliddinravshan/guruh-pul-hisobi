@@ -19,6 +19,7 @@ export interface AppDataContextValue {
   openExpenseModal: (group?: Group | null) => void;
   closeExpenseModal: () => void;
   handleCreateGroup: (groupData: Omit<Group, 'id' | 'totalExpenses' | 'createdAt'>) => void;
+  addGroupMembers: (groupId: string, members: string[]) => Promise<void>;
   handleAddExpense: (expenseData: Omit<Expense, 'id' | 'date'>) => void;
   markDebtPaid: (debt: Debt) => void;
   getGroupById: (groupId: string) => Group | undefined;

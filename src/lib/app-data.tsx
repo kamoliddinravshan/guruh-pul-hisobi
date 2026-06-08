@@ -279,6 +279,22 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       });
   };
 
+  const addGroupMembers = async (groupId: string, members: string[]) => {
+    const cleanedMembers = members.map((member) => member.trim()).filter(Boolean);
+    if (!cleanedMembers.length) return;
+
+    const updatedGroup = await apiRequest<ApiGroup>(`/groups/${groupId}/members/`, {
+      method: 'POST',
+      body: JSON.stringify({ members: cleanedMembers }),
+    });
+    const normalizedGroup = normalizeGroup(updatedGroup);
+    setGroups((currentGroups) =>
+      currentGroups.map((group) =>
+        group.id === groupId ? normalizedGroup : group
+      )
+    );
+  };
+
   const handleAddExpense = (expenseData: Omit<Expense, 'id' | 'date'>) => {
     const newExpense: Expense = {
       ...expenseData,
@@ -347,6 +363,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     openExpenseModal,
     closeExpenseModal,
     handleCreateGroup,
+    addGroupMembers,
     handleAddExpense,
     markDebtPaid,
     getGroupById: (groupId) => groups.find((group) => group.id === groupId),
