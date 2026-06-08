@@ -46,6 +46,44 @@ const defaultExpenses: Expense[] = [
   },
 ];
 
+interface ApiUser {
+  full_name?: string;
+  email?: string;
+}
+
+interface ApiMembership {
+  user?: ApiUser;
+}
+
+interface ApiGroup {
+  id: string;
+  name: string;
+  description?: string;
+  members?: Array<string | ApiMembership>;
+  totalExpenses?: number;
+  total_expenses?: number;
+  createdAt?: string | Date;
+  created_at?: string;
+}
+
+function normalizeGroup(group: ApiGroup): Group {
+  const members = (group.members || [])
+    .map((member) => {
+      if (typeof member === 'string') return member;
+      return member.user?.full_name || member.user?.email || 'Azo';
+    })
+    .filter(Boolean);
+
+  return {
+    id: group.id,
+    name: group.name,
+    description: group.description || '',
+    members,
+    totalExpenses: Number(group.totalExpenses ?? group.total_expenses ?? 0),
+    createdAt: new Date(group.createdAt || group.created_at || Date.now()),
+  };
+}
+
 function calculateDebts(groups: Group[], expenses: Expense[]): Debt[] {
   const debts: Debt[] = [];
 
@@ -117,18 +155,18 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
     async function loadBackendData() {
       try {
-        const apiGroups = await apiRequest<Group[]>('/groups');
+        const apiGroups = await apiRequest<ApiGroup[]>('/groups/');
         const apiExpenses = (
           await Promise.all(
             apiGroups.map((group) =>
-              apiRequest<Expense[]>(`/groups/${group.id}/expenses`).catch(() => [])
+              apiRequest<Expense[]>(`/groups/${group.id}/expenses/`).catch(() => [])
             )
           )
         ).flat();
         const apiSettlements = await apiRequest<Settlement[]>('/settlements').catch(() => []);
 
         if (ignore) return;
-        setGroups(apiGroups.map((group) => ({ ...group, createdAt: new Date(group.createdAt) })));
+        setGroups(apiGroups.map(normalizeGroup));
         setExpenses(apiExpenses.map((expense) => ({ ...expense, date: new Date(expense.date) })));
         setSettlements(apiSettlements.map((settlement) => ({ ...settlement, paidAt: new Date(settlement.paidAt) })));
       } catch {
@@ -176,14 +214,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setGroups((currentGroups) => [...currentGroups, newGroup]);
     setIsCreateGroupOpen(false);
 
-    apiRequest<Group>('/groups', {
+    apiRequest<ApiGroup>('/groups/', {
       method: 'POST',
-      body: JSON.stringify(groupData),
+      body: JSON.stringify({
+        name: groupData.name,
+        description: groupData.description,
+        currency: 'UZS',
+      }),
     })
       .then((createdGroup) => {
+        const normalizedGroup = normalizeGroup(createdGroup);
         setGroups((currentGroups) =>
           currentGroups.map((group) =>
-            group.id === newGroup.id ? { ...createdGroup, createdAt: new Date(createdGroup.createdAt) } : group
+            group.id === newGroup.id ? normalizedGroup : group
           )
         );
       })
@@ -208,7 +251,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
     closeExpenseModal();
 
-    apiRequest<Expense>(`/groups/${expenseData.groupId}/expenses`, {
+    apiRequest<Expense>(`/groups/${expenseData.groupId}/expenses/`, {
       method: 'POST',
       body: JSON.stringify(expenseData),
     })
