@@ -66,6 +66,19 @@ interface ApiGroup {
   created_at?: string;
 }
 
+interface ApiSettlement {
+  id: string;
+  groupId?: string;
+  group_id?: string;
+  paid_by?: ApiUser;
+  paid_to?: ApiUser;
+  from?: string;
+  to?: string;
+  amount: string | number;
+  paidAt?: string | Date;
+  settled_at?: string;
+}
+
 function normalizeGroup(group: ApiGroup): Group {
   const members = (group.members || [])
     .map((member) => {
@@ -81,6 +94,17 @@ function normalizeGroup(group: ApiGroup): Group {
     members,
     totalExpenses: Number(group.totalExpenses ?? group.total_expenses ?? 0),
     createdAt: new Date(group.createdAt || group.created_at || Date.now()),
+  };
+}
+
+function normalizeSettlement(settlement: ApiSettlement, groupId: string): Settlement {
+  return {
+    id: settlement.id,
+    groupId: settlement.groupId || settlement.group_id || groupId,
+    from: settlement.from || settlement.paid_by?.full_name || settlement.paid_by?.email || '',
+    to: settlement.to || settlement.paid_to?.full_name || settlement.paid_to?.email || '',
+    amount: Number(settlement.amount),
+    paidAt: new Date(settlement.paidAt || settlement.settled_at || Date.now()),
   };
 }
 
@@ -163,12 +187,20 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             )
           )
         ).flat();
-        const apiSettlements = await apiRequest<Settlement[]>('/settlements').catch(() => []);
+        const apiSettlements = (
+          await Promise.all(
+            apiGroups.map((group) =>
+              apiRequest<ApiSettlement[]>(`/groups/${group.id}/history/`)
+                .then((items) => items.map((item) => normalizeSettlement(item, group.id)))
+                .catch(() => [])
+            )
+          )
+        ).flat();
 
         if (ignore) return;
         setGroups(apiGroups.map(normalizeGroup));
         setExpenses(apiExpenses.map((expense) => ({ ...expense, date: new Date(expense.date) })));
-        setSettlements(apiSettlements.map((settlement) => ({ ...settlement, paidAt: new Date(settlement.paidAt) })));
+        setSettlements(apiSettlements);
       } catch {
         // Backend ishlamasa demo ma'lumotlar bilan ishlashda davom etadi.
       }
@@ -279,18 +311,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       ...currentSettlements,
     ]);
 
-    apiRequest<Settlement>('/settlements', {
-      method: 'POST',
-      body: JSON.stringify(settlement),
-    })
-      .then((createdSettlement) => {
-        setSettlements((currentSettlements) =>
-          currentSettlements.map((item) =>
-            item.id === settlement.id ? { ...createdSettlement, paidAt: new Date(createdSettlement.paidAt) } : item
-          )
-        );
-      })
-      .catch(() => undefined);
+    // Backend settlement endpoint requires member UUIDs. This legacy UI stores debts by display name,
+    // so the item is marked locally and no invalid /settlements request is sent.
   };
 
   const value: AppDataContextValue = {
